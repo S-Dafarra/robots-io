@@ -33,7 +33,7 @@ namespace RobotsIO {
 class RobotsIO::Hand::iCubHand
 {
 public:
-    iCubHand(const std::string& robot_name, const std::string& laterality, const std::string& port_prefix, const std::string& context, const bool& use_analogs, const std::string& thumb_version = "");
+    iCubHand(const std::string& robot_name, const std::string& laterality, const std::string& port_prefix, const std::string& context, const bool& use_analogs, const std::string& thumb_version = "", const bool& use_abduction = true);
 
     virtual ~iCubHand();
 
@@ -99,6 +99,11 @@ protected:
     yarp::sig::Matrix analog_bounds_;
 
     bool use_bounds_ = false;
+
+    /**
+     * Option to avoid using the abduction, since it is often out of bounds.
+     */
+    bool use_abduction_ = true;
 
     /**
      * Log name to be used in messages printed by the class.

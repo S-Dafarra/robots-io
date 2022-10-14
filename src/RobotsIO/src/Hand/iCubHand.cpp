@@ -28,15 +28,15 @@ using namespace yarp::sig;
 
 
 iCubHand::iCubHand
-(
-    const std::string& robot_name,
+(const std::string& robot_name,
     const std::string& laterality,
     const std::string& port_prefix,
     const std::string& context,
     const bool& use_analogs,
-    const std::string& thumb_version
-) :
+    const std::string& thumb_version,
+    const bool &use_abduction) :
     use_analogs_(use_analogs)
+  , use_abduction_(use_abduction)
 {
     /* Check YARP network. */
     if (!yarp_.checkNetwork())
@@ -231,6 +231,10 @@ std::pair<bool, std::unordered_map<std::string, Eigen::VectorXd>> iCubHand::enco
         /* Get only part of arm encoders related to the fingers. */
         toEigen(finger_encoders_) = toEigen(arm_encoders_).segment<9>(7);
     }
+
+    if (!use_abduction_)
+    {
+        finger_encoders_[0] = 60.0; //Force the *_hand_fingers to the "home" value
     }
 
     if (use_analogs_)
