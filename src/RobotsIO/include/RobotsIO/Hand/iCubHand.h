@@ -76,11 +76,21 @@ protected:
 
     yarp::os::BufferedPort<yarp::os::Bottle> port_arm_;
 
+
+    /**
+     * Utility struct to combine data relative to a single finger
+     */
+    struct Finger
+    {
+        iCub::iKin::iCubFinger iCubFinger;
+        yarp::sig::Vector chain_joints;
+        Eigen::VectorXd chain_joints_eigen;
+    };
+
     /**
      * Instances of iCub::iKin::iCubFinger required to combine arm and analog encoders.
      */
-
-    std::unordered_map<std::string, iCub::iKin::iCubFinger> fingers_;
+    std::unordered_map<std::string, Finger> fingers_;
 
     /**
      * Optional analog bounds.
@@ -95,6 +105,18 @@ protected:
      */
 
     const std::string log_name_ = "iCubHand";
+
+    /**
+     * Internal buffers
+     */
+    yarp::sig::Vector analogs_;
+
+    yarp::sig::Vector finger_encoders_;
+
+    yarp::sig::Vector arm_encoders_;
+
+    std::unordered_map<std::string, Eigen::VectorXd> output_encoders_;
+
 };
 
 #endif /* ROBOTSIO_ICUBHAND_H */

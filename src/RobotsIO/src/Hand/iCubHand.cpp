@@ -5,6 +5,9 @@
  * GPL-2+ license. See the accompanying LICENSE file for details.
  */
 
+#define NOMINMAX //Necessary for Windows when using min and max
+#include <cmath>
+
 #include <RobotsIO/Hand/iCubHand.h>
 
 #include <yarp/eigen/Eigen.h>
@@ -147,11 +150,11 @@ iCubHand::iCubHand
     std::string thumb_key = "thumb";
     if (!thumb_version.empty())
         thumb_key += "_" + thumb_version;
-    fingers_["thumb"] = iCubFinger(laterality + "_" + thumb_key);
-    fingers_["index"] = iCubFinger(laterality + "_index");
-    fingers_["middle"] = iCubFinger(laterality + "_middle");
-    fingers_["ring"] = iCubFinger(laterality + "_ring");
-    fingers_["little"] = iCubFinger(laterality + "_little");
+    fingers_["thumb"].iCubFinger = iCubFinger(laterality + "_" + thumb_key);
+    fingers_["index"].iCubFinger = iCubFinger(laterality + "_index");
+    fingers_["middle"].iCubFinger = iCubFinger(laterality + "_middle");
+    fingers_["ring"].iCubFinger = iCubFinger(laterality + "_ring");
+    fingers_["little"].iCubFinger = iCubFinger(laterality + "_little");
 
     /* Align joint bounds using those of the real robot. */
     if (ilimits_)
@@ -159,8 +162,12 @@ iCubHand::iCubHand
         std::deque<IControlLimits*> limits;
         limits.push_back(ilimits_);
         for (auto& finger : fingers_)
-            finger.second.alignJointsBounds(limits);
+            finger.second.iCubFinger.alignJointsBounds(limits);
     }
+
+    analogs_.resize(15);
+    finger_encoders_.resize(9);
+    arm_encoders_.resize(16);
 }
 
 
@@ -184,52 +191,46 @@ iCubHand::~iCubHand()
 std::pair<bool, std::unordered_map<std::string, Eigen::VectorXd>> iCubHand::encoders(const bool& blocking)
 {
     /* Analog encoders. */
-    yarp::sig::Vector analogs(15);
     bool outcome_analog = false;
 
     if (use_analogs_)
     {
         if (use_interface_analogs_)
-            outcome_analog = (ianalog_->read(analogs)) == (IAnalogSensor::AS_OK);
+            outcome_analog = (ianalog_->read(analogs_)) == (IAnalogSensor::AS_OK);
         else
         {
             Bottle* bottle_analogs =  port_analogs_.read(blocking);
 
             if (bottle_analogs != nullptr)
             {
-                for (size_t i = 0; i < analogs.size(); i++)
-                    analogs(i) = bottle_analogs->get(i).asFloat64();
+                for (size_t i = 0; i < std::min(analogs_.size(), bottle_analogs->size()); i++)
+                    analogs_(i) = bottle_analogs->get(i).asFloat64();
 
                 outcome_analog = true;
             }
         }
     }
 
-    /* Arm encoders. */
-    yarp::sig::Vector encoders(9);
-
     bool outcome_arm = false;
-
     {
-        yarp::sig::Vector arm(16);
-
         if (use_interface_arm_)
-            outcome_arm = iarm_->getEncoders(arm.data());
+            outcome_arm = iarm_->getEncoders(arm_encoders_.data());
         else
         {
             Bottle* bottle_arm =  port_arm_.read(blocking);
 
             if (bottle_arm != nullptr)
             {
-                for (size_t i = 0; i < arm.size(); i++)
-                    arm(i) = bottle_arm->get(i).asFloat64();
+                for (size_t i = 0; i < std::min(arm_encoders_.size(), bottle_arm->size()); i++)
+                    arm_encoders_(i) = bottle_arm->get(i).asFloat64();
 
                 outcome_arm = true;
             }
         }
 
         /* Get only part of arm encoders related to the fingers. */
-        toEigen(encoders) = toEigen(arm).segment<9>(7);
+        toEigen(finger_encoders_) = toEigen(arm_encoders_).segment<9>(7);
+    }
     }
 
     if (use_analogs_)
@@ -244,25 +245,23 @@ std::pair<bool, std::unordered_map<std::string, Eigen::VectorXd>> iCubHand::enco
     }
 
     /* Combine arm and analog encoders. */
-    std::unordered_map<std::string, VectorXd> output_encoders;
     for (auto& finger : fingers_)
     {
-        yarp::sig::Vector chain_joints;
         if (use_analogs_)
         {
             if (use_bounds_)
-                finger.second.getChainJoints(encoders, analogs, chain_joints, analog_bounds_);
+                finger.second.iCubFinger.getChainJoints(finger_encoders_, analogs_, finger.second.chain_joints, analog_bounds_);
             else
-                finger.second.getChainJoints(encoders, analogs, chain_joints);
+                finger.second.iCubFinger.getChainJoints(finger_encoders_, analogs_, finger.second.chain_joints);
         }
         else
-            finger.second.getChainJoints(encoders, chain_joints);
+            finger.second.iCubFinger.getChainJoints(finger_encoders_, finger.second.chain_joints);
 
-        VectorXd chain_joints_eigen = toEigen(chain_joints) * M_PI / 180.0;
-        output_encoders[finger.first] = chain_joints_eigen;
+        finger.second.chain_joints_eigen = toEigen(finger.second.chain_joints) * M_PI / 180.0;
+        output_encoders_[finger.first] = finger.second.chain_joints_eigen;
     }
 
-    return std::make_pair(true, output_encoders);
+    return std::make_pair(true, output_encoders_);
 }
 
 
@@ -277,7 +276,7 @@ std::pair<bool, yarp::sig::Vector> iCubHand::load_vector_double(const ResourceFi
     if (b == nullptr)
         ok = false;
 
-    if (b->size() != size)
+    if (ok && b->size() != size)
         ok = false;
 
     if (!ok)
