@@ -63,20 +63,20 @@ iCubHand::iCubHand
         {
             bool valid_vector;
             yarp::sig::Vector bounds_col_0;
-            std::tie(valid_vector, bounds_col_0) = load_vector_double(inner_rf, "bounds_col_0", 16);
+            std::tie(valid_vector, bounds_col_0) = load_vector_double(inner_rf, "bounds_col_0", 15);
             if (!valid_vector)
             {
-                throw std::runtime_error(log_name_ + "::ctor. Error: bounds requested but not available in the configuration file.");
+                throw std::runtime_error(log_name_ + "::ctor. Error: failed to retrieve \"bounds_col_0\". Either it is not available in the configuration file, or it is not a vector of double of dimensions 15.");
             }
 
             yarp::sig::Vector bounds_col_1;
-            std::tie(valid_vector, bounds_col_1) = load_vector_double(inner_rf, "bounds_col_1", 16);
+            std::tie(valid_vector, bounds_col_1) = load_vector_double(inner_rf, "bounds_col_1", 15);
             if (!valid_vector)
             {
-                throw std::runtime_error(log_name_ + "::ctor. Error: bounds requested but not available in the configuration file.");
+                throw std::runtime_error(log_name_ + "::ctor. Error: failed to retrieve \"bounds_col_1\". Either it is not available in the configuration file, or it is not a vector of double of dimensions 15.");
             }
 
-            analog_bounds_.resize(16, 2);
+            analog_bounds_.resize(15, 2);
             analog_bounds_.setCol(0, bounds_col_0);
             analog_bounds_.setCol(1, bounds_col_1);
         }
@@ -119,6 +119,17 @@ iCubHand::iCubHand
         /* Try to retrieve the control limits view. */
         if (!(drv_arm_.view(ilimits_)) || (ilimits_ == nullptr))
             throw std::runtime_error(log_name_ + "::ctor. Error: unable get view for finger control limits.");
+
+        int axes{0};
+        if (!iarm_->getAxes(&axes))
+        {
+            throw std::runtime_error(log_name_ + "::ctor. Error: failed to retrieve number of axes.");
+        }
+
+        if (axes != 16)
+        {
+            throw std::runtime_error(log_name_ + "::ctor. Error: expected to have exactly 16 encoders available.");
+        }
     }
 
     if (!use_interface_arm_)
