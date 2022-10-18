@@ -121,17 +121,22 @@ iCubHand::iCubHand
 
         /* Try to retrieve the control limits view. */
         if (!(drv_arm_.view(ilimits_)) || (ilimits_ == nullptr))
-            throw std::runtime_error(log_name_ + "::ctor. Error: unable get view for finger control limits.");
+        {
+            std::cerr << log_name_ + "::ctor. Error: unable get view for finger control limits. Avoiding to connect to the hand." << std::endl;
+            use_interface_arm_= false;
+        }
 
         int axes{0};
         if (!iarm_->getAxes(&axes))
         {
-            throw std::runtime_error(log_name_ + "::ctor. Error: failed to retrieve number of axes.");
+            std::cerr << log_name_ + "::ctor. Error: failed to retrieve number of axes. Avoiding to connect to the hand." << std::endl;
+            use_interface_arm_= false;
         }
 
         if (axes != 16)
         {
-            throw std::runtime_error(log_name_ + "::ctor. Error: expected to have exactly 16 encoders available.");
+            std::cerr << log_name_ + "::ctor. Error: expected to have exactly 16 encoders available. Avoiding to connect to the hand." << std::endl;
+            use_interface_arm_= false;
         }
     }
 
