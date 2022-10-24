@@ -78,6 +78,7 @@ set(${LIBRARY_TARGET_NAME}_HDR_UTILS
     include/RobotsIO/Utils/Segmentation.h
     include/RobotsIO/Utils/SpatialVelocity.h
     include/RobotsIO/Utils/SpatialVelocityBuffer.h
+    include/RobotsIO/Utils/ManualTransform.h
     include/RobotsIO/Utils/Transform.h
     include/RobotsIO/Utils/TransformWithVelocity.h
     include/RobotsIO/Utils/any.h
@@ -118,6 +119,7 @@ set(${LIBRARY_TARGET_NAME}_SRC_UTILS
     src/Utils/Segmentation.cpp
     src/Utils/SpatialVelocity.cpp
     src/Utils/SpatialVelocityBuffer.cpp
+    src/Utils/ManualTransform.cpp
     src/Utils/Transform.cpp
     src/Utils/TransformWithVelocity.cpp
     )
