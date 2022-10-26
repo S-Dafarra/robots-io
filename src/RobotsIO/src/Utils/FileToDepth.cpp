@@ -50,8 +50,8 @@ std::pair<bool, Eigen::MatrixXf> RobotsIO::Utils::file_to_depth(const std::strin
         }
 
         /* Load image. */
-        float float_image_raw[dims[0] * dims[1]];
-        if (std::fread(float_image_raw, sizeof(float), dims[0] * dims[1], in) != dims[0] * dims[1])
+        std::vector<float> float_image_raw(dims[0] * dims[1]);
+        if (std::fread(float_image_raw.data(), sizeof(float), dims[0] * dims[1], in) != dims[0] * dims[1])
         {
             std::cout << log_name << "Error: cannot load depth data for frame " + file_name << std::endl;
 
@@ -62,7 +62,7 @@ std::pair<bool, Eigen::MatrixXf> RobotsIO::Utils::file_to_depth(const std::strin
 
         /* Store image. */
         MatrixXf float_image(dims[1], dims[0]);
-        float_image = Map<Matrix<float, -1, -1, RowMajor>>(float_image_raw, dims[1], dims[0]);
+        float_image = Map<Matrix<float, -1, -1, RowMajor>>(float_image_raw.data(), dims[1], dims[0]);
 
         fclose(in);
 
