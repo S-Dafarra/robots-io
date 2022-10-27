@@ -35,6 +35,8 @@ class RobotsIO::Hand::iCubHand
 public:
     iCubHand(const std::string& robot_name, const std::string& laterality, const std::string& port_prefix, const std::string& context, const bool& use_analogs, const std::string& thumb_version = "", const bool& use_abduction = true);
 
+    iCubHand(const std::string& robot_name, const std::string& laterality, const std::string& port_prefix, const bool& use_analogs, const bool& use_analogs_bounds, const yarp::sig::Matrix& analog_bounds, const std::string& thumb_version = "", const bool& use_abduction = true);
+
     virtual ~iCubHand();
 
     std::pair<bool, std::unordered_map<std::string, Eigen::VectorXd>> encoders(const bool& blocking);
@@ -44,7 +46,7 @@ protected:
 
     yarp::os::Network yarp_;
 
-    const bool use_analogs_ = false;
+    bool use_analogs_ = false;
 
     /**
      * Indicates whether the PolyDriver interface is available.
@@ -121,6 +123,8 @@ protected:
     yarp::sig::Vector arm_encoders_;
 
     std::unordered_map<std::string, Eigen::VectorXd> output_encoders_;
+
+    void setup(const std::string& robot_name, const std::string& laterality, const std::string& port_prefix, const bool& use_analogs, const bool& use_analogs_bounds = false, const yarp::sig::Matrix& analog_bounds = yarp::sig::Matrix(), const std::string& thumb_version = "", const bool& use_abduction = true);
 
 };
 
