@@ -78,9 +78,6 @@ if (USE_ICUB)
   list(APPEND CMAKE_MODULE_PATH ${ICUBCONTRIB_MODULE_PATH})
   include(ICUBcontribHelpers)
   include(ICUBcontribOptions)
-
-  icubcontrib_set_default_prefix()
-  icubcontrib_add_uninstall_target()
 endif()
 
 # Library sources
@@ -110,7 +107,5 @@ install_basic_package_files(${PROJECT_NAME}
                             NO_CHECK_REQUIRED_COMPONENTS_MACRO
                             DEPENDENCIES ${DEPENDENCIES})
 
-if (NOT USE_ICUB)
-  # Add standard uninstall target
-  include(AddUninstallTarget)
-endif()
+# Add standard uninstall target
+include(AddUninstallTarget)
